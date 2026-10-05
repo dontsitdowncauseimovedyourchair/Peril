@@ -8,8 +8,15 @@ import (
 )
 
 func handlerPause(gs *gamelogic.GameState) func(routing.PlayingState) {
-	defer fmt.Print("> ")
 	return func(ps routing.PlayingState) {
+		defer fmt.Print("> ")
 		gs.HandlePause(ps)
+	}
+}
+
+func handleMove(gs *gamelogic.GameState) func(move gamelogic.ArmyMove) {
+	return func(move gamelogic.ArmyMove) {
+		defer fmt.Print("> ")
+		gs.HandleMove(move)
 	}
 }

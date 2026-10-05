@@ -32,9 +32,20 @@ func main() {
 
 	gs := gamelogic.NewGameState(username)
 
-	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.SimpleQueueType(1), handlerPause(gs))
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient, handlerPause(gs))
 	if err != nil {
 		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilDirect, err.Error())
+		return
+	}
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+username, routing.ArmyMovesPrefix+".*", pubsub.Durable, handleMove(gs))
+	if err != nil {
+		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilDirect, err.Error())
+		return
+	}
+
+	chann, err := connection.Channel()
+	if err != nil {
+		log.Fatalf("flop creating channel: %s", err.Error())
 		return
 	}
 
@@ -58,10 +69,16 @@ func main() {
 			}
 			break
 		case "move":
-			_, err := gs.CommandMove(input)
+			move, err := gs.CommandMove(input)
 			if err != nil {
 				fmt.Printf("flop moving: %s\n", err.Error())
 			}
+			err = pubsub.PublishJSON(chann, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+username, move)
+			if err != nil {
+				fmt.Printf("flop publishing move: %s\n", err.Error())
+				break
+			}
+			fmt.Printf("Move has been published.\n")
 			break
 
 		case "status":

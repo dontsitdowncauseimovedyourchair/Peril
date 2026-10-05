@@ -5,8 +5,8 @@ import amqp "github.com/rabbitmq/amqp091-go"
 type SimpleQueueType int
 
 const (
-	durable SimpleQueueType = iota
-	transient
+	Durable SimpleQueueType = iota
+	Transient
 )
 
 func DeclareAndBind(
@@ -23,13 +23,13 @@ func DeclareAndBind(
 
 	var queue amqp.Queue
 	switch queueType {
-	case durable:
+	case Durable:
 		queue, err = chann.QueueDeclare(queueName, true, false, false, false, nil)
 		if err != nil {
 			return nil, amqp.Queue{}, err
 		}
 		break
-	case transient:
+	case Transient:
 		queue, err = chann.QueueDeclare(queueName, false, true, true, false, nil)
 		if err != nil {
 			return nil, amqp.Queue{}, err
