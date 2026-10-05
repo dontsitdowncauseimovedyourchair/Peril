@@ -28,14 +28,16 @@ func main() {
 		log.Fatalf("flop welcoming: %s", err.Error())
 	}
 
-	_, _, err = pubsub.DeclareAndBind(connection, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.SimpleQueueType(amqp.Transient))
-	if err != nil {
-		return
-	}
-
 	userQuit := false
 
 	gs := gamelogic.NewGameState(username)
+
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.SimpleQueueType(1), handlerPause(gs))
+	if err != nil {
+		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilDirect, err.Error())
+		return
+	}
+
 	for {
 		if userQuit {
 			break
