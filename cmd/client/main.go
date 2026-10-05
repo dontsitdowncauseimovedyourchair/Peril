@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -35,7 +33,55 @@ func main() {
 		return
 	}
 
-	osSignalsChan := make(chan os.Signal, 1)
-	signal.Notify(osSignalsChan, os.Interrupt)
-	<-osSignalsChan
+	userQuit := false
+
+	gs := gamelogic.NewGameState(username)
+	for {
+		if userQuit {
+			break
+		}
+
+		input := gamelogic.GetInput()
+		if len(input) == 0 {
+			continue
+		}
+
+		userCommand := input[0]
+
+		switch userCommand {
+		case "spawn":
+			err := gs.CommandSpawn(input)
+			if err != nil {
+				fmt.Printf("flop spawning: %s\n", err.Error())
+			}
+			break
+		case "move":
+			_, err := gs.CommandMove(input)
+			if err != nil {
+				fmt.Printf("flop moving: %s\n", err.Error())
+			}
+			break
+
+		case "status":
+			gs.CommandStatus()
+			break
+
+		case "help":
+			gamelogic.PrintClientHelp()
+			break
+
+		case "spam":
+			fmt.Println("Spamming not allowed... yet")
+			break
+
+		case "quit":
+			gamelogic.PrintQuit()
+			userQuit = true
+			break
+
+		default:
+			fmt.Println("Your troops are oblivious to such command")
+			continue
+		}
+	}
 }
