@@ -21,16 +21,19 @@ func DeclareAndBind(
 		return nil, amqp.Queue{}, err
 	}
 
+	args := amqp.Table{
+		"x-dead-letter-exchange": "peril_dlx",
+	}
 	var queue amqp.Queue
 	switch queueType {
 	case Durable:
-		queue, err = chann.QueueDeclare(queueName, true, false, false, false, nil)
+		queue, err = chann.QueueDeclare(queueName, true, false, false, false, args)
 		if err != nil {
 			return nil, amqp.Queue{}, err
 		}
 		break
 	case Transient:
-		queue, err = chann.QueueDeclare(queueName, false, true, true, false, nil)
+		queue, err = chann.QueueDeclare(queueName, false, true, true, false, args)
 		if err != nil {
 			return nil, amqp.Queue{}, err
 		}

@@ -32,20 +32,27 @@ func main() {
 
 	gs := gamelogic.NewGameState(username)
 
+	chann, err := connection.Channel()
+	if err != nil {
+		log.Fatalf("flop creating channel: %s", err.Error())
+		return
+	}
+
 	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient, handlerPause(gs))
 	if err != nil {
 		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilDirect, err.Error())
 		return
 	}
-	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+username, routing.ArmyMovesPrefix+".*", pubsub.Durable, handleMove(gs))
+
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+username, routing.ArmyMovesPrefix+".*", pubsub.Durable, handleMove(gs, chann))
 	if err != nil {
-		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilDirect, err.Error())
+		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilTopic, err.Error())
 		return
 	}
 
-	chann, err := connection.Channel()
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gs))
 	if err != nil {
-		log.Fatalf("flop creating channel: %s", err.Error())
+		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilTopic, err.Error())
 		return
 	}
 

@@ -2,9 +2,18 @@ package pubsub
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+)
+
+type AckType int
+
+const (
+	Ack AckType = iota
+	NackRequeue
+	NackDiscard
 )
 
 func SubscribeJSON[T any](
@@ -13,7 +22,7 @@ func SubscribeJSON[T any](
 	queueName,
 	key string,
 	queueType SimpleQueueType,
-	handler func(T),
+	handler func(T) AckType,
 ) error {
 	chann, _, err := DeclareAndBind(conn, exchange, queueName, key, queueType)
 	if err != nil {
@@ -33,8 +42,33 @@ func SubscribeJSON[T any](
 				log.Printf("flop unmarshalling: %s\n", err.Error())
 				return
 			}
-			handler(decoded)
-			err = delivery.Ack(false)
+			ackt := handler(decoded)
+			switch ackt {
+			case Ack:
+				delivery.Ack(false)
+				if err != nil {
+					fmt.Println("Flop ack!")
+				} else {
+					fmt.Println("acked!!")
+				}
+				break
+			case NackRequeue:
+				delivery.Nack(false, true)
+				if err != nil {
+					fmt.Println("Flop nackrequeuing!")
+				} else {
+					fmt.Println("nackrequeued!")
+				}
+				break
+			case NackDiscard:
+				err = delivery.Nack(false, false)
+				if err != nil {
+					fmt.Println("Flop nackdiscarding!")
+				} else {
+					fmt.Println("nackdiscarded!")
+				}
+				break
+			}
 			if err != nil {
 				log.Fatalf("flop acknowledging delivery: %s", err.Error())
 			}
