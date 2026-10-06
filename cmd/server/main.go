@@ -29,8 +29,9 @@ func main() {
 		return
 	}
 
-	_, _, err = pubsub.DeclareAndBind(connection, routing.ExchangePerilTopic, routing.GameLogSlug, "game_logs.*", pubsub.Durable)
+	err = pubsub.SubscribeGob(connection, routing.ExchangePerilTopic, routing.GameLogSlug, routing.GameLogSlug+".*", pubsub.Durable, handlerLog())
 	if err != nil {
+		fmt.Printf("Flop subscribingGob: %s\n", err.Error())
 		return
 	}
 

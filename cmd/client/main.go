@@ -50,7 +50,7 @@ func main() {
 		return
 	}
 
-	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gs))
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gs, chann))
 	if err != nil {
 		fmt.Printf("Flop subscribing to %s: %s", routing.ExchangePerilTopic, err.Error())
 		return
