@@ -97,7 +97,11 @@ func main() {
 			break
 
 		case "spam":
-			fmt.Println("Spamming not allowed... yet")
+			err := handleSpam(chann, username, input)
+			if err != nil {
+				fmt.Printf("flop spamming: %s", err.Error())
+				return
+			}
 			break
 
 		case "quit":

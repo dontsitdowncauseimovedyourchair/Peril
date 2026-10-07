@@ -43,6 +43,11 @@ func subscribe[T any](
 		return err
 	}
 
+	err = chann.Qos(10, 0, false)
+	if err != nil {
+		return err
+	}
+
 	deliveryChan, err := chann.Consume(q.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
@@ -86,4 +87,29 @@ func handleWar(gs *gamelogic.GameState, chann *amqp.Channel) func(rw gamelogic.R
 		fmt.Printf("outcome not known: %v\n", outcome)
 		return pubsub.NackDiscard
 	}
+}
+
+func handleSpam(chann *amqp.Channel, username string, input []string) error {
+	if len(input) != 2 {
+		return fmt.Errorf("usage: spam <n>")
+	}
+	n, err := strconv.Atoi(input[1])
+	if err != nil {
+		return err
+	}
+
+	for _ = range n {
+		maliciousLog := gamelogic.GetMaliciousLog()
+		err := pubsub.PublishLog(chann, routing.GameLog{
+			CurrentTime: time.Now(),
+			Message:     maliciousLog,
+			Username:    username,
+		})
+		if err != nil {
+			fmt.Printf("Flop publishing malicious log: %s\n", err.Error())
+			continue
+		}
+	}
+
+	return nil
 }
